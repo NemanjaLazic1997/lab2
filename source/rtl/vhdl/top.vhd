@@ -168,11 +168,11 @@ begin
   graphics_lenght <= conv_std_logic_vector(MEM_SIZE*8*8, GRAPH_MEM_ADDR_WIDTH);
   
   -- removed to inputs pin
-  direct_mode <= '1';
-  display_mode     <= "10";  -- 01 - text mode, 10 - graphics mode, 11 - text & graphics
+  direct_mode <= '0';
+  display_mode     <= "01";  -- 01 - text mode, 10 - graphics mode, 11 - text & graphics
   
   font_size        <= x"1";
-  show_frame       <= '1';
+  show_frame       <= '0';
   foreground_color <= x"FFFFFF";
   background_color <= x"000000";
   frame_color      <= x"FF0000";
@@ -250,11 +250,70 @@ begin
   --dir_red
   --dir_green
   --dir_blue
+  
+  dir_red <= "11111111" when dir_pixel_column>= "00000000000" and dir_pixel_column < "00001010000"	else			-- 0 - 80
+				 "11110000" when dir_pixel_column>= "00001010000" and dir_pixel_column < "00010100000"	else			-- 80 - 160
+				 "00001111" when dir_pixel_column>= "00010100000" and dir_pixel_column < "00011110000"	else			-- 160 - 240
+				 "11001100" when dir_pixel_column>= "00011110000" and dir_pixel_column < "00101000000"	else			-- 240 - 320
+				 "00110011" when dir_pixel_column>= "00101000000" and dir_pixel_column < "00110010000"	else			-- 320 - 400
+				 "10101010" when dir_pixel_column>= "00110010000" and dir_pixel_column < "00111100000" else			-- 400 - 480
+				 "01010101" when dir_pixel_column>= "00111100000" and dir_pixel_column < "01000110000" else			-- 480 - 560
+				 "00000000";																													-- 560 - 640
+				 
+  dir_green <= "00000000" when dir_pixel_column>= "00000000000" and dir_pixel_column < "00001010000"	else			-- 0 - 80
+				   "00001111" when dir_pixel_column>= "00001010000" and dir_pixel_column < "00010100000"	else			-- 80 - 160
+				   "11110000" when dir_pixel_column>= "00010100000" and dir_pixel_column < "00011110000"	else			-- 160 - 240
+				   "00110011" when dir_pixel_column>= "00011110000" and dir_pixel_column < "00101000000"	else			-- 240 - 320
+				   "11001100" when dir_pixel_column>= "00101000000" and dir_pixel_column < "00110010000"	else			-- 320 - 400 
+				   "01010101" when dir_pixel_column>= "00110010000" and dir_pixel_column < "00111100000" else			-- 400 - 480
+				   "10101010" when dir_pixel_column>= "00111100000" and dir_pixel_column < "01000110000" else			-- 480 - 560
+				   "11111111";																														-- 560 - 640	
+
+  dir_blue <= "00000000" when dir_pixel_column>= "00000000000" and dir_pixel_column < "00001010000"	else			-- 0 - 80
+				  "00001111" when dir_pixel_column>= "00001010000" and dir_pixel_column < "00010100000"	else			-- 80 - 160
+				  "01001101" when dir_pixel_column>= "00010100000" and dir_pixel_column < "00011110000"	else			-- 160 - 240
+				  "00110011" when dir_pixel_column>= "00011110000" and dir_pixel_column < "00101000000"	else			-- 240 - 320
+				  "11001100" when dir_pixel_column>= "00101000000" and dir_pixel_column < "00110010000"	else			-- 320 - 400
+				  "11110000" when dir_pixel_column>= "00110010000" and dir_pixel_column < "00111100000" 	else			-- 400 - 480
+				  "10101010" when dir_pixel_column>= "00111100000" and dir_pixel_column < "01000110000"	else			-- 480 - 560
+				  "10101010";																														-- 560 - 640	
  
   -- koristeci signale realizovati logiku koja pise po TXT_MEM
   --char_address
   --char_value
   --char_we
+  
+	char_we <= '1';
+  
+	process(pix_clock_s, reset_n_i) begin
+		if reset_n_i = '0' then
+			char_address <= (others=>'0');
+		elsif rising_edge(pix_clock_s) then
+			if (char_address = "01001011000000") then
+				char_address <= (others=>'0');
+			else
+				char_address <= char_address + '1';
+			end if;
+		end if;
+	end process;
+  
+	char_value <=  "001110" when char_address = x"1" else		-- N
+						"000101" when char_address = x"2" else		-- E
+						"001101" when char_address = x"3" else		-- M
+						"000001" when char_address = x"4" else		-- A
+						"001110" when char_address = x"5" else		-- N
+						"001010" when char_address = x"6" else		-- J
+						"000001" when char_address = x"7" else		-- A
+						"100000" when char_address = x"8" else		-- 
+						"001100" when char_address = x"9" else		-- L
+						"000001" when char_address = x"A" else		-- A
+						"011010" when char_address = x"B" else		-- Z
+						"001001" when char_address = x"C" else		-- I
+						"000011" when char_address = x"D" else		-- C
+						"100000";
+					 
+ 
+  
   
   -- koristeci signale realizovati logiku koja pise po GRAPH_MEM
   --pixel_address
