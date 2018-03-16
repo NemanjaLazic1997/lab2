@@ -121,6 +121,31 @@ architecture rtl of top is
   );
   end component;
   
+  component clk_counter IS GENERIC(
+                              -- maksimalna vrednost broja do kojeg brojac broji
+                              max_cnt : STD_LOGIC_VECTOR(25 DOWNTO 0) := "10111110101111000010000000" -- 50 000 000
+                             );
+                      PORT   (
+                               clk_i     : IN  STD_LOGIC; -- ulazni takt
+                               rst_i     : IN  STD_LOGIC; -- reset signal
+                               cnt_en_i  : IN  STD_LOGIC; -- signal dozvole brojanja
+                               cnt_rst_i : IN  STD_LOGIC; -- signal resetovanja brojaca (clear signal)
+                               one_sec_o : OUT STD_LOGIC  -- izlaz koji predstavlja proteklu jednu sekundu vremena
+                             );
+  END component;
+  
+  component reg is
+	generic(
+		WIDTH    : positive := 1;
+		RST_INIT : integer := 0
+	);
+	port(
+		i_clk  : in  std_logic;
+		in_rst : in  std_logic;
+		i_d    : in  std_logic_vector(WIDTH-1 downto 0);
+		o_q    : out std_logic_vector(WIDTH-1 downto 0)
+	);
+  END component;
   
   constant update_period     : std_logic_vector(31 downto 0) := conv_std_logic_vector(1, 32);
   
@@ -286,10 +311,10 @@ begin
 	char_we <= '1';
   
 	process(pix_clock_s, reset_n_i) begin
-		if reset_n_i = '0' then
+		if (reset_n_i = '0') then
 			char_address <= (others=>'0');
-		elsif rising_edge(pix_clock_s) then
-			if (char_address = "01001011000000") then
+		elsif (pix_clock_s' event and pix_clock_s = '1') then
+			if (char_address = 4800) then
 				char_address <= (others=>'0');
 			else
 				char_address <= char_address + '1';
@@ -297,28 +322,33 @@ begin
 		end if;
 	end process;
   
-	char_value <=  "001110" when char_address = x"1" else		-- N
-						"000101" when char_address = x"2" else		-- E
-						"001101" when char_address = x"3" else		-- M
-						"000001" when char_address = x"4" else		-- A
-						"001110" when char_address = x"5" else		-- N
-						"001010" when char_address = x"6" else		-- J
-						"000001" when char_address = x"7" else		-- A
-						"100000" when char_address = x"8" else		-- 
-						"001100" when char_address = x"9" else		-- L
-						"000001" when char_address = x"A" else		-- A
-						"011010" when char_address = x"B" else		-- Z
-						"001001" when char_address = x"C" else		-- I
-						"000011" when char_address = x"D" else		-- C
+	char_value <=  "001110" when char_address = 0 else		-- N
+						"000101" when char_address = 1 else		-- E
+						"001101" when char_address = 2 else		-- M
+						"000001" when char_address = 3 else		-- A
+						"001110" when char_address = 4 else		-- N
+						"001010" when char_address = 5 else		-- J
+						"000001" when char_address = 6 else		-- A
+						"100000" when char_address = 7 else		-- 
+						"001100" when char_address = 8 else		-- L
+						"000001" when char_address = 9 else		-- A
+						"011010" when char_address = 10 else	-- Z
+						"001001" when char_address = 11 else	-- I
+						"000011" when char_address = 12 else	-- C
 						"100000";
 					 
  
-  
   
   -- koristeci signale realizovati logiku koja pise po GRAPH_MEM
   --pixel_address
   --pixel_value
   --pixel_we
+  
+  pixel_we <= '1';
+  
+  
+  
+  
   
   
 end rtl;
